@@ -10,6 +10,7 @@ terraform {
 }
 
 locals {
+  resource_name_prefix = "tfmod-ram-policy-read-only-policy"
   allowed_services = [
     "ecs", "acr", "ack", "fc", "ess", "slb", "vpc", "oss",
     "ots", "dms", "nas", "rds", "cms", "log", "ram", "kms",
@@ -19,8 +20,8 @@ locals {
 module "ram-read-only-policy-example" {
   source = "../../modules/read-only-policy"
 
-  policy_name = "tf-example-ram-read-only-policy-basic"
-  description = "tf-example-ram-read-only-policy-basic"
+  policy_name = "${local.resource_name_prefix}-example"
+  description = "${local.resource_name_prefix}-example"
 
   allowed_services             = local.allowed_services
   allow_web_console_services   = true
