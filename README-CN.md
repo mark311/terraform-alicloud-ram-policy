@@ -5,6 +5,13 @@ terraform-alicloud-ram-policy
 
 Terraform模块可以在阿里云上创建自定义策略。
 
+terraform-alicloud-ram-policy 模块的目标是为用户提供场景化的策略模版。
+它包含模块自身（主模块），以及位于 modules 目录中的子模块。场景化的策
+略模版全部位于子模块中，请查看 examples 目录中的示例获取适合你需要的子
+模块。不推荐使用主模块，主模块提供了一种有限能力的通用策略生成方式，但
+其能力不及 data source `alicloud_ram_policy_document`，主模块的保留主
+要是为了避免给存量用户带来兼容性影响。
+
 支持以下类型的资源：
 
 * [RAM policy](https://www.terraform.io/docs/providers/alicloud/r/ram_policy.html)
