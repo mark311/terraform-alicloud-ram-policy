@@ -31,7 +31,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_ram-read-only-policy-example"></a> [ram-read-only-policy-example](#module\_ram-read-only-policy-example) | ../../modules/ram-read-only-policy | n/a |
+| <a name="module_ram-read-only-policy-example"></a> [ram-read-only-policy-example](#module\_ram-read-only-policy-example) | ../../modules/read-only-policy | n/a |
 
 ## Resources
 

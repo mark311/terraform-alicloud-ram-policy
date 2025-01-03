@@ -33,7 +33,7 @@ No modules.
 | <a name="input_allow_sls_log_query_actions"></a> [allow\_sls\_log\_query\_actions](#input\_allow\_sls\_log\_query\_actions) | Allows log:Query* actions | `bool` | `true` | no |
 | <a name="input_allow_web_console_services"></a> [allow\_web\_console\_services](#input\_allow\_web\_console\_services) | Allows List/Get/Describe/View actions for services used when browsing AliCloud console (e.g. resource-groups, tag, health services) | `bool` | `true` | no |
 | <a name="input_allowed_services"></a> [allowed\_services](#input\_allowed\_services) | List of services to allow Get/List/Describe/View options. Service name should be the same as corresponding service RAM code | `list(string)` | n/a | yes |
-| <a name="input_create_policy"></a> [create\_policy](#input\_create\_policy) | Whether to create the RAM policy | `bool` | `true` | no |
+| <a name="input_create"></a> [create](#input\_create) | Whether to create the RAM policy | `bool` | `true` | no |
 | <a name="input_description"></a> [description](#input\_description) | The description of the policy | `string` | `"RAM Policy"` | no |
 | <a name="input_policy_name"></a> [policy\_name](#input\_policy\_name) | The name of the policy | `string` | `null` | no |
 | <a name="input_web_console_services"></a> [web\_console\_services](#input\_web\_console\_services) | List of web console services to allow | `list(string)` | <pre>[<br/>  "resource-groups",<br/>  "tag",<br/>  "health",<br/>  "ce"<br/>]</pre> | no |
