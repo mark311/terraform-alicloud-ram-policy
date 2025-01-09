@@ -1,5 +1,5 @@
 variable "defined_actions" {
-  description = "Map of several defined actions"
+  description = "(Deprecated) Map of several defined actions"
   type        = map(list(string))
   default = {
     ###########################

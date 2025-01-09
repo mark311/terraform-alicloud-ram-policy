@@ -22,7 +22,7 @@ variable "skip_region_validation" {
 }
 
 variable "create" {
-  description = "Whether to create RAM policies. If true, the policies should not be empty."
+  description = "(Deprecated) Whether to create RAM policies. If true, the policies should not be empty."
   type        = bool
   default     = true
 }

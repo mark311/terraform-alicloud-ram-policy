@@ -30,19 +30,19 @@ variable "additional_allowed_actions" {
 variable "allow_sls_log_query_actions" {
   description = "Allows log:Query* actions"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "allow_predefined_sts_actions" {
-  description = "Allows GetCallerIdentity/GetSessionToken/GetAccessKeyInfo sts actions"
+  description = "Allows sts:GetCallerIdentity action"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "allow_web_console_services" {
   description = "Allows List/Get/Describe/View actions for services used when browsing AliCloud console (e.g. resource-groups, tag, health services)"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "web_console_services" {
