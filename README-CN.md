@@ -3,20 +3,129 @@ terraform-alicloud-ram-policy
 
 中文简体 | [English](./README.md)
 
-terraform-alicloud-ram-policy 模块的目标是为用户提供场景化的策略模版。
-它包含模块自身（主模块），以及位于 modules 目录中的子模块。
-
-场景化的策略模版全部位于子模块中，请查看 examples 目录中的示例获取适合
-你需要的子模块。
-
-不推荐使用主模块，主模块提供了一种有限能力的通用策略生成方式，但其能力
-不及 data source `alicloud_ram_policy_document`，主模块的保留主要是为
-了避免给存量用户带来兼容性影响。
+terraform-alicloud-ram-policy 用于场景化的的策略创建。
 
 ## 用法
 
+场景化的策略模版全部位于子模块中，请查看 examples 目录中的示例获取适合
+你需要的子模块。 不推荐使用主模块，使用
+[alicloud_ram_policy_document](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/data-sources/ram_policy_document)
+代替主模块，主模块的保留主要是为了避免给存量用户带来兼容性影响。
+
+### 基础用法
+
+创建一个财务人员只读的策略（无参数）
+
+```hcl
+module "example" {
+  source = "../../modules/BssReadOnly"
+  create_policy = true
+}
+```
+
+创建一个对部分OSS Object前缀只读的策略（带参数）
+
+```hcl
+module "example" {
+  source = "../../modules/OssBucketReadOnly"
+  create_policy = true
+  oss_bucket_name = "bkt1"
+  oss_object_names = ["foo/*", "bar/*"]
+}
+```
+
+策略模板的输出中，最关键的两个信息：
+
+* policy\_name - 策略的名称
+* policy\_document - 策略文档的JSON字符串（依赖创建策略实体）
+* policy\_json - 策略文档的JSON字符串（在不创建策略实体的情况下，可用该字段获取策略内容）
+
+
+### 指定策略名称
+
+默认情况下，策略模版有默认的策略名称，与策略模板同名。如果你需要在账号下用同一个模板创建多个策略，那么你需要指定不同的策略名称。
+
+你可以指定完整的策略名称，如：
+
+```hcl
+module "example" {
+  source = "../../modules/OssBucketReadOnly"
+  create_policy = true
+  policy_name = "MyCustomPolicyName"
+  oss_bucket_name = "bkt1"
+  oss_object_names = ["foo/*", "bar/*"]
+}
+```
+
+也可以在默认名称之后添加后缀，如：
+
+```hcl
+module "example" {
+  source = "../../modules/OssBucketReadOnly"
+  create_policy = true
+  policy_name_suffix = "-ForBucket1"
+  oss_bucket_name = "bkt1"
+  oss_object_names = ["foo/*", "bar/*"]
+}
+```
+
+### 组合多个场景
+
+策略模版支持仅输出策略文档内容（create\_policy设置为false），而不创建策略实体，同时利用 [alicloud_ram_policy_document](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/data-sources/ram_policy_document) 可以将多个策略文档内容合并成一个，从而创建更丰富的策略。
+
+```hcl
+module "policy1" {
+  source = "../../modules/BssReadOnly"
+}
+
+module "policy2" {
+  source = "../../modules/OssBucketReadOnly"
+  oss_bucket_name = "bkt1"
+  oss_object_names = ["foo/*", "bar/*"]
+}
+
+data "alicloud_ram_policy_document" {
+  source_policy_documents = [module.policy1.policy_json, module.policy2.policy_json]
+}
+```
+
 
 ## 模块
+
+* [PowerUserAccess](./modules/PowerUserAccess)([example](./examples/PowerUserAccess)) - 负责企业的云上运维管理，可创建、查看、操作所有的云服务，不能管理身份权限、不能管理账号架构、不能使用财务关联。
+* [FinanceStaff](./modules/FinanceStaff)([example](./examples/FinanceStaff)) - 负责企业的财务工作，可查看账单、充值付款、开取发票等，可使用财务分析功能，拥有财账系统的全部权限。
+* [NetworkAdministrator](./modules/NetworkAdministrator)([example](./examples/NetworkAdministrator)) - 负责企业的网络架构搭建和管理，可开通和购买创建网络服务，拥有网络服务的所有权限和 ECS 安全组的权限。
+* [DatabaseAdministrator](./modules/DatabaseAdministrator)([example](./examples/DatabaseAdministrator)) - 负责企业的数据库运维管理，可开通和购买创建数据库服务，拥有数据库服务的所有权限。
+* [SecurityAdministrator](./modules/SecurityAdministrator)([example](./examples/SecurityAdministrator)) - 负责企业云上安全，可开通和购买云安全服务，制定并实施安全规则，拥有安全服务的所有权限。
+* [AuditAdministrator](./modules/AuditAdministrator)([example](./examples/AuditAdministrator)) - 具有配置审计、操作审计和日志管理的全部权限，同时可以查询所有阿里云资源现状。
+* [EcsFullAccessDenySecurityChange](./modules/EcsFullAccessDenySecurityChange)([example](./examples/EcsFullAccessDenySecurityChange)) - 允许完全访问 ECS，禁止变更安全组的操作。
+* [RdsFullAccessDenySecurityChange](./modules/RdsFullAccessDenySecurityChange)([example](./examples/RdsFullAccessDenySecurityChange)) - 允许完全访问 RDS，禁止变更数据库安全白名单 IP 的操作。
+* [EcsInstanceReboot](./modules/EcsInstanceReboot)([example](./examples/EcsInstanceReboot)) - 允许列出所有 ECS 实例、重启指定 ECS 实例。
+* [EcsInstanceRunCommand](./modules/EcsInstanceRunCommand)([example](./examples/EcsInstanceRunCommand)) - 允许列出所有 ECS 实例、运行和停止远程命令。
+* [RdsDbInstanceBackup](./modules/RdsDbInstanceBackup)([example](./examples/RdsDbInstanceBackup)) - 允许列出所有 RDS 实例和备份指定 RDS 实例。
+* [RedisDbInstanceAccount](./modules/RedisDbInstanceAccount)([example](./examples/RedisDbInstanceAccount)) - 允许为所有 Redis 实例创建账号、修改密码、设置 IP 白名单。
+* [OssBucketReadOnly](./modules/OssBucketReadOnly)([example](./examples/OssBucketReadOnly)) - 允许通过 OSS 控制台读取指定 Bucket 的所有资源。
+* [MnsQueueMsgConsume](./modules/MnsQueueMsgConsume)([example](./examples/MnsQueueMsgConsume)) - 允许向指定 MNS 队列写入和消费消息、设置消息可见性、消费成功后删除消息。
+* [OssBucketPutObject](./modules/OssBucketPutObject)([example](./examples/OssBucketPutObject)) - 允许向指定的 OSS Bucket 写入并读取对象，无删除权限，适用于文件上传下载场景。
+* [OtsInstanceGetRow](./modules/OtsInstanceGetRow)([example](./examples/OtsInstanceGetRow)) - 允许查询指定 OTS 实例中的所有表格数据，可获取单行数据，批量查询多行数据，使用多元索引进行搜索。
+* [OssBucketFullAccessDenyDelete](./modules/OssBucketFullAccessDenyDelete)([example](./examples/OssBucketFullAccessDenyDelete)) - 允许访问指定 Bucket 所有资源，禁止删除指定资源。
+* [CrRepositoryPull](./modules/CrRepositoryPull)([example](./examples/CrRepositoryPull)) - 允许列出全部命名空间并拉取指定命名空间的所有仓库。
+* [CrRepositoryFullAccess](./modules/CrRepositoryFullAccess)([example](./examples/CrRepositoryFullAccess)) - 允许完全访问容器镜像服务的指定仓库。
+* [KmsKeyUse](./modules/KmsKeyUse)([example](./examples/KmsKeyUse)) - 允许列出、查看和使用密钥。
+* [KmsSecretReadOnly](./modules/KmsSecretReadOnly)([example](./examples/KmsSecretReadOnly)) - 允许列出和查看凭据。
+* [AlidnsDomainFullAccess](./modules/AlidnsDomainFullAccess)([example](./examples/AlidnsDomainFullAccess)) - 允许列出所有域名并管理指定域名。
+* [EcsFullAccessDenyBuy](./modules/EcsFullAccessDenyBuy)([example](./examples/EcsFullAccessDenyBuy)) - 允许完全访问 ECS，禁止购买、续费、变配等资金相关操作。
+* [RdsFullAccessDenyBuy](./modules/RdsFullAccessDenyBuy)([example](./examples/RdsFullAccessDenyBuy)) - 允许完全访问 RDS，禁止购买、续费等资金相关操作。
+* [RedisFullAccessDenyBuy](./modules/RedisFullAccessDenyBuy)([example](./examples/RedisFullAccessDenyBuy)) - 允许完全访问 Redis，禁止购买、续费、变配等资金相关操作。
+* [SlbFullAccessDenyBuy](./modules/SlbFullAccessDenyBuy)([example](./examples/SlbFullAccessDenyBuy)) - 允许完全访问 SLB，禁止购买、续费、变配等资金相关操作。
+* [BssReadOnly](./modules/BssReadOnly)([example](./examples/BssReadOnly)) - 允许查看费用中心，支持导出订单和账单数据。
+* [RamFullAccessOnlyMFAEnabled](./modules/RamFullAccessOnlyMFAEnabled)([example](./examples/RamFullAccessOnlyMFAEnabled)) - 允许用户完全访问 RAM，禁止 MFA 未启用的用户访问 RAM .
+* [PostLogToSlsProject](./modules/PostLogToSlsProject)([example](./examples/PostLogToSlsProject)) - 允许向指定日志项目投递日志
+* [AckClusterFullAccess](./modules/AckClusterFullAccess)([example](./examples/AckClusterFullAccess)) - 允许列出和查询指定的容器服务集群。
+* [AhasApplicaitonReadOnly](./modules/AhasApplicaitonReadOnly)([example](./examples/AhasApplicaitonReadOnly)) - 允许查看指定 AHAS 应用
+* [AhasApplicaitonFullAccess](./modules/AhasApplicaitonFullAccess)([example](./examples/AhasApplicaitonFullAccess)) - 允许查看指定 AHAS 应用和授权服务启用
+* [MaxComputeAccessOSSBucket](./modules/MaxComputeAccessOSSBucket)([example](./examples/MaxComputeAccessOSSBucket)) - 允许 MaxCompute 访问指定 OSS Bucket
+* [MaxComputeAccessKMSKey](./modules/MaxComputeAccessKMSKey)([example](./examples/MaxComputeAccessKMSKey)) - 允许按照 MaxCompute 需要使用 KMS 密钥执行加解密
 
 ## 示例
 

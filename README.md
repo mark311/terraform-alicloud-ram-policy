@@ -1,59 +1,126 @@
-Terraform module which create RAM policies on Alibaba Cloud.   
+Terraform module which create RAM policies on Alibaba Cloud.
 terraform-alicloud-ram-policy
 
-English | [简体中文](https://github.com/terraform-alicloud-modules/terraform-alicloud-ram-policy/blob/master/README-CN.md)
+English | [简体中文](./README-CN.md)
 
 Terraform module can create custom policies on Alibaba Cloud.
 
-These types of resources are supported:
-
-* [RAM policy](https://www.terraform.io/docs/providers/alicloud/r/ram_policy.html)
-
 ## Usage
 
-```hcl
-module "ram-policy" {
-  source = "terraform-alicloud-modules/ram-policy/alicloud"
-  policies = [
-    #########################################
-    # Create policies using default actions #
-    #########################################
-    {
-       # name is the name of the policy, default to a name with prefix `terraform-ram-policy-`
-       name = "test"
-       # defined_action is the default resource operation specified by the system. You can refer to the `policies.tf` file.
-       defined_actions = join(",", ["instance-create", "vpc-create", "vswitch-create", "security-group-create"])
-       effect          = "Allow"
-       force           = "true"
-    },
+Scenario-based strategy templates are all located in submodules. Please refer to the examples in the `examples` directory to find the submodule that suits your needs. It is not recommended to use the main module; instead, use [alicloud_ram_policy_document](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/data-sources/ram_policy_document) as a substitute for the main module. The main module is retained primarily to avoid compatibility impacts for existing users.
 
-    ########################################
-    # Create policies using custom actions #
-    ########################################
-    {
-        #actions is the action of custom specific resource.
-        #resources is the specific object authorized to customize.
-        actions   = join(",", ["ecs:ModifyInstanceAttribute", "vpc:ModifyVpc", "vswitch:ModifyVSwitch"])
-        resources = join(",", ["acs:ecs:*:*:instance/i-001", "acs:vpc:*:*:vpc/v-001", "acs:vpc:*:*:vswitch/vsw-001"])
-        effect    = "Deny"
-    },
-    
-    #########################################################
-    # Create policies using both default and custom actions #
-    #########################################################  
-    {
-        defined_actions = join(",", ["security-group-read", "security-group-rule-read"])
-        actions         = join(",", ["ecs:JoinSecurityGroup", "ecs:LeaveSecurityGroup"])
-        resources       = join(",", ["acs:ecs:cn-qingdao:*:instance/*", "acs:ecs:cn-qingdao:*:security-group/*"])
-        effect          = "Allow"
-    }
-  ]
+### Basic Usage
+
+Create a read-only policy for financial personnel (no parameters).
+
+```hcl
+module "example" {
+  source = "../../modules/BssReadOnly"
+  create_policy = true
 }
 ```
 
-## Examples
+Create a read-only policy for certain OSS Object prefixes (with parameters).
 
-* [Complete Ram Policy example](https://github.com/terraform-alicloud-modules/terraform-alicloud-ram-policy/tree/master/examples/complete)
+```hcl
+module "example" {
+  source = "../../modules/OssBucketReadOnly"
+  create_policy = true
+  oss_bucket_name = "bkt1"
+  oss_object_names = ["foo/*", "bar/*"]
+}
+```
+
+The most critical pieces of information in the output of the policy template:
+
+* policy\_name - The name of the policy.
+* policy\_document - The JSON string of the policy document (dependent on creating the policy entity).
+* policy\_json - The JSON string of the policy document (available to obtain policy content without creating the policy entity).
+
+### Specify Policy Name
+
+By default, the policy template has a default policy name that is the same as the policy template. If you need to create multiple policies using the same template under your account, you will need to specify different policy names.
+
+You can specify a complete policy name, like:
+
+```hcl
+module "example" {
+  source = "../../modules/OssBucketReadOnly"
+  create_policy = true
+  policy_name = "MyCustomPolicyName"
+  oss_bucket_name = "bkt1"
+  oss_object_names = ["foo/*", "bar/*"]
+}
+```
+
+Alternatively, you can add a suffix to the default name, like:
+
+```hcl
+module "example" {
+  source = "../../modules/OssBucketReadOnly"
+  create_policy = true
+  policy_name_suffix = "-ForBucket1"
+  oss_bucket_name = "bkt1"
+  oss_object_names = ["foo/*", "bar/*"]
+}
+```
+
+### Combine Multiple Scenarios
+
+The policy template supports outputting only the content of the policy document (set `create_policy` to false) without creating the policy entity. Simultaneously, by using [alicloud_ram_policy_document](https://registry.terraform.io/providers/aliyun/alicloud/latest/docs/data-sources/ram_policy_document), you can merge multiple policy document contents into one to create more comprehensive policies.
+
+```hcl
+module "policy1" {
+  source = "../../modules/BssReadOnly"
+}
+
+module "policy2" {
+  source = "../../modules/OssBucketReadOnly"
+  oss_bucket_name = "bkt1"
+  oss_object_names = ["foo/*", "bar/*"]
+}
+
+data "alicloud_ram_policy_document" {
+  source_policy_documents = [module.policy1.policy_json, module.policy2.policy_json]
+}
+```
+
+## Modules
+
+* [PowerUserAccess](./modules/PowerUserAccess)([example](./examples/PowerUserAccess)) - Power user, who is responsible for enterprise cloud operation, can create and view and operate all cloud services, can NOT manage identity permissions, can NOT manage account structure, can NOT use financial center.
+* [FinanceStaff](./modules/FinanceStaff)([example](./examples/FinanceStaff)) - Finance staff, who is responsible for financial work of the enterprise, can view bills, recharge and pay, invoice, etc., can use financial analysis, and has all permissions for financial account system.
+* [NetworkAdministrator](./modules/NetworkAdministrator)([example](./examples/NetworkAdministrator)) - Network Administrator, who is responsible for building and managing the network architecture of enterprise, can open and create network services, has all permissions for network services and ECS security groups.
+* [DatabaseAdministrator](./modules/DatabaseAdministrator)([example](./examples/DatabaseAdministrator)) - Database administrator, who is responsible for enterprise databases operation, can open and create database services, and has all permissions for database services.
+* [SecurityAdministrator](./modules/SecurityAdministrator)([example](./examples/SecurityAdministrator)) - Security administrator, who is responsible for enterprise cloud security, can open and create cloud security services, develop and implement security rules, has all permissions for security services.
+* [AuditAdministrator](./modules/AuditAdministrator)([example](./examples/AuditAdministrator)) - Auditing administrator, who can access Cloud Config, ActionTrail, SLS and describe all cloud resources.
+* [EcsFullAccessDenySecurityChange](./modules/EcsFullAccessDenySecurityChange)([example](./examples/EcsFullAccessDenySecurityChange)) - Allow to full access ECS service and deny to create or update or delete security groups.
+* [RdsFullAccessDenySecurityChange](./modules/RdsFullAccessDenySecurityChange)([example](./examples/RdsFullAccessDenySecurityChange)) - Allow to full access RDS service and deny to modify security settings.
+* [EcsInstanceReboot](./modules/EcsInstanceReboot)([example](./examples/EcsInstanceReboot)) - Allow to list all ECS instances and reboot specified instances.
+* [EcsInstanceRunCommand](./modules/EcsInstanceRunCommand)([example](./examples/EcsInstanceRunCommand)) - Allow to list all ECS instances, run and stop commands on instances.
+* [RdsDbInstanceBackup](./modules/RdsDbInstanceBackup)([example](./examples/RdsDbInstanceBackup)) - Allow to list all RDS instances, create and modify backups for specified instances.
+* [RedisDbInstanceAccount](./modules/RedisDbInstanceAccount)([example](./examples/RedisDbInstanceAccount)) - Allow to list all Redis instances, create account and reset password and modify securify IPs.
+* [OssBucketReadOnly](./modules/OssBucketReadOnly)([example](./examples/OssBucketReadOnly)) - Allow to access resources of specified OSS bucket.
+* [MnsQueueMsgConsume](./modules/MnsQueueMsgConsume)([example](./examples/MnsQueueMsgConsume)) - Allow to send to MNS queue, consume from MNS queue, set message visibility, delete messages after consumption.
+* [OssBucketPutObject](./modules/OssBucketPutObject)([example](./examples/OssBucketPutObject)) - Allow to put and get objects to/from specified OSS Bucket, with no permission to delete, suitable for file upload and download scenarios.
+* [OtsInstanceGetRow](./modules/OtsInstanceGetRow)([example](./examples/OtsInstanceGetRow)) - Allow to query all table data in a specified OTS instance, retrieve single row data, perform batch queries for multiple rows of data, and use secondary indexes for searching.
+* [OssBucketFullAccessDenyDelete](./modules/OssBucketFullAccessDenyDelete)([example](./examples/OssBucketFullAccessDenyDelete)) - Allow to full access resources of specified OSS buckets and deny to delete any.
+* [CrRepositoryPull](./modules/CrRepositoryPull)([example](./examples/CrRepositoryPull)) - Allow to list all CR namespaces and pull repositories of specified namespaces.
+* [CrRepositoryFullAccess](./modules/CrRepositoryFullAccess)([example](./examples/CrRepositoryFullAccess)) - Allow to full access specified ACR repositories.
+* [KmsKeyUse](./modules/KmsKeyUse)([example](./examples/KmsKeyUse)) - Allow to list and use keys.
+* [KmsSecretReadOnly](./modules/KmsSecretReadOnly)([example](./examples/KmsSecretReadOnly)) - Allow to list and view all KMS secrets.
+* [AlidnsDomainFullAccess](./modules/AlidnsDomainFullAccess)([example](./examples/AlidnsDomainFullAccess)) - Allow to list all domains and manage specified domains.
+* [EcsFullAccessDenyBuy](./modules/EcsFullAccessDenyBuy)([example](./examples/EcsFullAccessDenyBuy)) - Allow to full access ECS service and deny to buy and renew and modify spec.
+* [RdsFullAccessDenyBuy](./modules/RdsFullAccessDenyBuy)([example](./examples/RdsFullAccessDenyBuy)) - Allow to full access RDS service and deny to buy and renew.
+* [RedisFullAccessDenyBuy](./modules/RedisFullAccessDenyBuy)([example](./examples/RedisFullAccessDenyBuy)) - Allow to full access Redis service and deny to buy and renew and modify spec.
+* [SlbFullAccessDenyBuy](./modules/SlbFullAccessDenyBuy)([example](./examples/SlbFullAccessDenyBuy)) - Allow to full access SLB service and deny to buy and renew and modify spec.
+* [BssReadOnly](./modules/BssReadOnly)([example](./examples/BssReadOnly)) - Allow to view and export orders and billing.
+* [RamFullAccessOnlyMFAEnabled](./modules/RamFullAccessOnlyMFAEnabled)([example](./examples/RamFullAccessOnlyMFAEnabled)) - Allow to full access RAM and deny to access RAM if MFA disabled.
+* [PostLogToSlsProject](./modules/PostLogToSlsProject)([example](./examples/PostLogToSlsProject)) - Allow to post log to specified SLS project
+* [AckClusterFullAccess](./modules/AckClusterFullAccess)([example](./examples/AckClusterFullAccess)) - Allow to list and view specified ACK clusters.
+* [AhasApplicaitonReadOnly](./modules/AhasApplicaitonReadOnly)([example](./examples/AhasApplicaitonReadOnly)) - Allow to access specified AHAS applications.
+* [AhasApplicaitonFullAccess](./modules/AhasApplicaitonFullAccess)([example](./examples/AhasApplicaitonFullAccess)) - Allow to access specified AHAS applications and authorize AHAS.
+* [MaxComputeAccessOSSBucket](./modules/MaxComputeAccessOSSBucket)([example](./examples/MaxComputeAccessOSSBucket)) - Allow MaxCompute to access specified OSS Bucket
+* [MaxComputeAccessKMSKey](./modules/MaxComputeAccessKMSKey)([example](./examples/MaxComputeAccessKMSKey)) - Allow MaxCompute to encrypt or decrypt with specified KMS key
 
 ## Notes
 From the version v1.1.0, the module has removed the following `provider` setting:
