@@ -15,66 +15,10 @@ terraform-alicloud-ram-policy 模块的目标是为用户提供场景化的策�
 
 ## 用法
 
-创建一个权限策略，策略内容是模块指定的云服务 RAM Codes 所对应的 Get\*, List\*, Describe\*, View\* 的操作权限。
-如果有一些产品的读接口不是以这几种前缀开头的，也可以通过 additional\_allowed\_actions来额外补充。
-
-```hcl
-module "ram-policy" {
-  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/read-only-policy"
-  policy_name                = "ram-read-only-policy-example"
-  allowed_services           = ["ecs", "vpc"]
-  additional_allowed_actions = ["log:Query*"]
-}
-```
-
-上面的module会创建出类似如下的权限策略：
-
-```json
-{
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ecc:Describe*",
-        "ecc:Get*",
-        "ecc:List*",
-        "ecc:View*",
-        "vpc:Describe*",
-        "vpc:Get*",
-        "vpc:List*",
-        "vpc:View*"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ram:ListRoles",
-      "Resource": "*"
-    }
-  ],
-  "Version": "1"
-}
-```
-
-创建允许查询SLS日志的策略。
-
-```hcl
-module "ram-policy" {
-  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/read-only-policy"
-  policy_name                 = "ram-read-only-policy-example"
-  allow_sls_log_query_actions = true
-}
-```
 
 ## 模块
 
-* [read-only-policy](./modules/read-only-policy)
-
 ## 示例
-
-* [complete](./examples/complete)
-* [read-only-policy](./examples/read-only-policy)
-
 
 ## 注意事项
 本Module从版本v1.1.0开始已经移除掉如下的 provider 的显示设置：
