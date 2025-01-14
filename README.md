@@ -15,7 +15,7 @@ Create a read-only policy for financial personnel (no parameters).
 
 ```hcl
 module "example" {
-  source = "../../modules/BssReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/BssReadOnly"
   create_policy = true
 }
 ```
@@ -24,7 +24,7 @@ Create a read-only policy for certain OSS Object prefixes (with parameters).
 
 ```hcl
 module "example" {
-  source = "../../modules/OssBucketReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/OssBucketReadOnly"
   create_policy = true
   oss_bucket_name = "bkt1"
   oss_object_names = ["foo/*", "bar/*"]
@@ -45,7 +45,7 @@ You can specify a complete policy name, like:
 
 ```hcl
 module "example" {
-  source = "../../modules/OssBucketReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/OssBucketReadOnly"
   create_policy = true
   policy_name = "MyCustomPolicyName"
   oss_bucket_name = "bkt1"
@@ -57,7 +57,7 @@ Alternatively, you can add a suffix to the default name, like:
 
 ```hcl
 module "example" {
-  source = "../../modules/OssBucketReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/OssBucketReadOnly"
   create_policy = true
   policy_name_suffix = "-ForBucket1"
   oss_bucket_name = "bkt1"
@@ -71,11 +71,11 @@ The policy template supports outputting only the content of the policy document 
 
 ```hcl
 module "policy1" {
-  source = "../../modules/BssReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/BssReadOnly"
 }
 
 module "policy2" {
-  source = "../../modules/OssBucketReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/OssBucketReadOnly"
   oss_bucket_name = "bkt1"
   oss_object_names = ["foo/*", "bar/*"]
 }

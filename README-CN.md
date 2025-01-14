@@ -18,7 +18,7 @@ terraform-alicloud-ram-policy 用于场景化的的策略创建。
 
 ```hcl
 module "example" {
-  source = "../../modules/BssReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/BssReadOnly"
   create_policy = true
 }
 ```
@@ -27,7 +27,7 @@ module "example" {
 
 ```hcl
 module "example" {
-  source = "../../modules/OssBucketReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/OssBucketReadOnly"
   create_policy = true
   oss_bucket_name = "bkt1"
   oss_object_names = ["foo/*", "bar/*"]
@@ -49,7 +49,7 @@ module "example" {
 
 ```hcl
 module "example" {
-  source = "../../modules/OssBucketReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/OssBucketReadOnly"
   create_policy = true
   policy_name = "MyCustomPolicyName"
   oss_bucket_name = "bkt1"
@@ -61,7 +61,7 @@ module "example" {
 
 ```hcl
 module "example" {
-  source = "../../modules/OssBucketReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/OssBucketReadOnly"
   create_policy = true
   policy_name_suffix = "-ForBucket1"
   oss_bucket_name = "bkt1"
@@ -75,11 +75,11 @@ module "example" {
 
 ```hcl
 module "policy1" {
-  source = "../../modules/BssReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/BssReadOnly"
 }
 
 module "policy2" {
-  source = "../../modules/OssBucketReadOnly"
+  source = "terraform-alicloud-modules/ram-policy/alicloud//modules/OssBucketReadOnly"
   oss_bucket_name = "bkt1"
   oss_object_names = ["foo/*", "bar/*"]
 }
